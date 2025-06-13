@@ -16,7 +16,7 @@ import time
 
 @st.cache_resource
 def train_model():
-    df = pd.read_csv("Churn.py.csv")
+    df = pd.read_csv("Bank Customer Churn Prediction.csv")
     df = df.drop(columns=["customer_id"])
     df["country"] = df["country"].map({"France": 0, "Spain": 1, "Germany": 2})
     df["gender"] = df["gender"].map({"Male": 0, "Female": 1})
