@@ -6,9 +6,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
-from streamlit_lottie import st_lottie
-import json
 import time
+import os
+
+# ✅ THIS MUST BE FIRST
+st.set_page_config(page_title="Customer Churn Prediction", page_icon="📊")
 
 # ---------------------------- #
 # 🚀 Data Preparation & Model
@@ -16,7 +18,11 @@ import time
 
 @st.cache_resource
 def train_model():
-    df = pd.read_csv("Bank Customer Churn Prediction.csv")
+    if not os.path.exists("Churn.csv"):
+        st.error("❗ Dataset file 'Churn.csv' not found. Please upload it.")
+        st.stop()
+
+    df = pd.read_csv("Churn.csv")
     df = df.drop(columns=["customer_id"])
     df["country"] = df["country"].map({"France": 0, "Spain": 1, "Germany": 2})
     df["gender"] = df["gender"].map({"Male": 0, "Female": 1})
@@ -40,27 +46,21 @@ def train_model():
 
 model, scaler, report = train_model()
 
-
-
-st.set_page_config(page_title="Customer Churn Prediction", page_icon="📊")
-
-
-
-st.title("📊 Customer Churn Prediction with ✨Animations✨")
+st.title("📊 Customer Churn Prediction")
 
 # ---------------------------- #
 # 📋 User Inputs
 # ---------------------------- #
 
-country = st.selectbox("🌍 Country", ["France", "Spain", "Germany"])
-gender = st.selectbox("👤 Gender", ["Male", "Female"])
-age = st.number_input("🎂 Age", min_value=18, max_value=100, value=30)
-tenure = st.number_input("📅 Tenure (years)", min_value=0, max_value=10, value=3)
-balance = st.number_input("💰 Balance", min_value=0.0, value=50000.0)
-products_number = st.number_input("🛒 Number of Products", min_value=1, max_value=4, value=1)
-credit_card = st.selectbox("💳 Has Credit Card?", ["Yes", "No"])
-active_member = st.selectbox("✅ Active Member?", ["Yes", "No"])
-estimated_salary = st.number_input("💵 Estimated Salary", min_value=0.0, value=50000.0)
+country = st.selectbox("Country", ["France", "Spain", "Germany"])
+gender = st.selectbox("Gender", ["Male", "Female"])
+age = st.number_input("Age", min_value=18, max_value=100, value=30)
+tenure = st.number_input("Tenure (years)", min_value=0, max_value=10, value=3)
+balance = st.number_input("Balance", min_value=0.0, value=50000.0)
+products_number = st.number_input("Number of Products", min_value=1, max_value=4, value=1)
+credit_card = st.selectbox("Has Credit Card?", ["Yes", "No"])
+active_member = st.selectbox("Active Member?", ["Yes", "No"])
+estimated_salary = st.number_input("Estimated Salary", min_value=0.0, value=50000.0)
 
 country_map = {"France": 0, "Spain": 1, "Germany": 2}
 gender_map = {"Male": 0, "Female": 1}
@@ -81,8 +81,8 @@ input_data = np.array([[
 
 input_scaled = scaler.transform(input_data)
 
-if st.button("🔎 Predict Churn"):
-    with st.spinner("🔄 Analyzing customer data..."):
+if st.button("Predict Churn"):
+    with st.spinner("Predicting..."):
         progress = st.progress(0)
         for i in range(100):
             time.sleep(0.01)
@@ -92,10 +92,10 @@ if st.button("🔎 Predict Churn"):
 
     if prediction[0] == 1:
         st.error(f"⚠️ This customer is likely to churn! (Probability: {probability:.2f}%)")
-        st.snow()  # ❄️ Snow animation for dramatic effect
+        st.snow()
     else:
         st.success(f"✅ This customer is unlikely to churn. (Probability: {probability:.2f}%)")
-        st.balloons()  # 🎈 Celebration for good result
+        st.balloons()
 
 with st.expander("Show Model Evaluation Metrics"):
     st.write("Classification Report (on test set):")
