@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 import time
 
-# Set page configuration early
+# Set page configuration
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="📊", layout="centered")
 
 # --------- Custom CSS for Background & Styling ---------
@@ -52,6 +52,22 @@ div[data-testid="stExpander"] > div > div {
     background-color: rgba(255, 255, 255, 0.85);
     border-radius: 10px;
 }
+
+footer {
+    visibility: hidden;
+}
+
+footer:after {
+    content:'Made by Darfisha';
+    visibility: visible;
+    display: block;
+    text-align: center;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 1px 1px 2px #000000;
+}
 </style>
 """
 st.markdown(page_bg_img, unsafe_allow_html=True)
@@ -83,7 +99,6 @@ def train_model():
 
 model, scaler, feature_columns, report = train_model()
 
-# ----------------- App Layout -----------------
 st.title("📊 Customer Churn Prediction")
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -142,3 +157,4 @@ if submitted:
 
 with st.expander("🔎 Show Model Metrics"):
     st.json(report)
+
