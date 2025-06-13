@@ -40,20 +40,11 @@ def train_model():
 
 model, scaler, report = train_model()
 
-# ---------------------------- #
-# 🎨 Animations
-# ---------------------------- #
 
-def load_lottie_animation(filepath):
-    with open(filepath, "r") as f:
-        return json.load(f)
-
-# You can download Lottie JSON animations from https://lottiefiles.com/
-lottie_customer = load_lottie_animation("customer_animation.json")  # You should download and use an actual file
 
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="📊")
 
-st_lottie(lottie_customer, height=250)
+
 
 st.title("📊 Customer Churn Prediction with ✨Animations✨")
 
