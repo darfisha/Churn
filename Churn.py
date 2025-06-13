@@ -7,53 +7,44 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 import time
-import os
 
-# ✅ THIS MUST BE FIRST
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="📊")
-
-# ---------------------------- #
-# 🚀 Data Preparation & Model
-# ---------------------------- #
 
 @st.cache_resource
 def train_model():
-    if not os.path.exists("Churn.csv"):
-        st.error("❗ Dataset file 'Churn.csv' not found. Please upload it.")
-        st.stop()
+    df = pd.read_csv("Bank Customer Churn Prediction.csv")
 
-    df = pd.read_csv("Churn.csv")
+    # Drop unused column
     df = df.drop(columns=["customer_id"])
+
+    # Encode categorical variables
     df["country"] = df["country"].map({"France": 0, "Spain": 1, "Germany": 2})
     df["gender"] = df["gender"].map({"Male": 0, "Female": 1})
-    df["credit_card"] = df["credit_card"].map({"Yes": 1, "No": 0})
-    df["active_member"] = df["active_member"].map({"Yes": 1, "No": 0})
+
     X = df.drop(columns=["churn"])
     y = df["churn"]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    X_scaled = scaler.fit_transform(X)
+
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
     model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train_scaled, y_train)
-    y_pred = model.predict(X_test_scaled)
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
     report = classification_report(y_test, y_pred, output_dict=True)
-    with open("churn_model.pkl", "wb") as f:
-        pickle.dump(model, f)
-    with open("scaler.pkl", "wb") as f:
-        pickle.dump(scaler, f)
-    return model, scaler, report
 
-model, scaler, report = train_model()
+    return model, scaler, X.columns.tolist(), report
 
-st.title("📊 Customer Churn Prediction")
+model, scaler, feature_columns, report = train_model()
 
-# ---------------------------- #
-# 📋 User Inputs
-# ---------------------------- #
+st.title("📊 Bank Customer Churn Prediction")
 
+# ----------------- USER INPUT -----------------
 country = st.selectbox("Country", ["France", "Spain", "Germany"])
 gender = st.selectbox("Gender", ["Male", "Female"])
+credit_score = st.number_input("Credit Score", min_value=300, max_value=900, value=600)
 age = st.number_input("Age", min_value=18, max_value=100, value=30)
 tenure = st.number_input("Tenure (years)", min_value=0, max_value=10, value=3)
 balance = st.number_input("Balance", min_value=0.0, value=50000.0)
@@ -67,36 +58,33 @@ gender_map = {"Male": 0, "Female": 1}
 credit_card_map = {"Yes": 1, "No": 0}
 active_member_map = {"Yes": 1, "No": 0}
 
-input_data = np.array([[
-    country_map[country],
-    gender_map[gender],
-    age,
-    tenure,
-    balance,
-    products_number,
-    credit_card_map[credit_card],
-    active_member_map[active_member],
-    estimated_salary
-]])
+input_dict = {
+    "credit_score": credit_score,
+    "country": country_map[country],
+    "gender": gender_map[gender],
+    "age": age,
+    "tenure": tenure,
+    "balance": balance,
+    "products_number": products_number,
+    "credit_card": credit_card_map[credit_card],
+    "active_member": active_member_map[active_member],
+    "estimated_salary": estimated_salary,
+}
 
+input_data = np.array([[input_dict[col] for col in feature_columns]])
 input_scaled = scaler.transform(input_data)
 
 if st.button("Predict Churn"):
     with st.spinner("Predicting..."):
-        progress = st.progress(0)
-        for i in range(100):
+        for i in range(50):
             time.sleep(0.01)
-            progress.progress(i + 1)
         prediction = model.predict(input_scaled)
         probability = model.predict_proba(input_scaled)[0][1] * 100
 
     if prediction[0] == 1:
-        st.error(f"⚠️ This customer is likely to churn! (Probability: {probability:.2f}%)")
-        st.snow()
+        st.error(f"⚠️ Likely to Churn! (Probability: {probability:.2f}%)")
     else:
-        st.success(f"✅ This customer is unlikely to churn. (Probability: {probability:.2f}%)")
-        st.balloons()
+        st.success(f"✅ Unlikely to Churn (Probability: {probability:.2f}%)")
 
-with st.expander("Show Model Evaluation Metrics"):
-    st.write("Classification Report (on test set):")
+with st.expander("Show Model Metrics"):
     st.json(report)
